@@ -290,14 +290,31 @@ app.delete('/api/files/:id', authenticateToken, authorizeAdmin, async (req, res)
 const OpenAI = require('openai');
 
 app.post('/api/ai/chat', authenticateToken, async (req, res) => {
-  const { message } = req.body;
+  const { message, mode, subject, unit } = req.body;
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    
+    let systemPrompt = 'You are a helpful AI tutor for a university student.';
+    let contextStr = '';
+    if (subject && subject !== 'None') contextStr += `Subject Context: ${subject}. `;
+    if (unit && unit !== 'None') contextStr += `Unit Context: ${unit}. `;
+
+    if (mode === 'quick_revision') {
+      systemPrompt = `You are an expert tutor. Provide a Quick Revision output. Format with a main heading, and subheadings using Markdown. Each heading must have exactly 1 line or half-line explanation. Keep content VERY concise, easy to scan, and structured like short bulleted notes. ${contextStr}`;
+    } else if (mode === 'detailed_explanation') {
+      systemPrompt = `You are an expert tutor. Provide a Detailed Explanation suitable for exam-ready 10-mark long-form answers. Use a clear structured hierarchy with Markdown headings. Each section must include clear explanations and key points. Add a distinct Summary section at the end. ${contextStr}`;
+    } else if (mode === 'practice_mode') {
+      systemPrompt = `You are an examiner testing a student. Provide Practice Mode testing. Generate random questions covering the syllabus context. Include a mix of short answers, long answers, and conceptual questions (easy/medium/hard). Do not answer the questions immediately, just ask them. ${contextStr}`;
+    } else {
+      // Default Q&A Mode
+      systemPrompt = `You are a direct Q&A tutor. Answer the user's questions clearly and concisely. By default, keep your answers to about 2 lines unless the user explicitly asks for more detail. ${contextStr}`;
+    }
+
     const completion = await openai.chat.completions.create({
       messages: [
-        { role: 'system', content: 'You are a helpful AI tutor for a university student. Answer questions concisely and focus on educational value.' },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
       model: 'gpt-4o-mini',

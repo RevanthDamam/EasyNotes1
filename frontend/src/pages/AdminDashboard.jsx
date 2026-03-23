@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from '../store'
-import { FileUp, Trash2, Edit, FileText } from 'lucide-react'
+import { CloudUpload, Trash2, Edit, Files, LayoutList, Layers } from 'lucide-react'
 
 const predefinedSubjects = {
+  'R19-1-1': ['English', 'Mathematics I', 'Physics', 'Programming for Problem Solving'],
   'R20-1-1': ['English', 'Mathematics I', 'Physics', 'Programming for Problem Solving'],
   'R20-1-2': ['Mathematics II', 'Chemistry', 'Data Structures', 'Engineering Graphics'],
   'R20-2-1': ['DBMS', 'OOP', 'Digital Logic Design', 'Discrete Math'],
@@ -15,10 +16,20 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({
     title: '', description: '', regulation: 'R20', year: '1', semester: '1', subject: '', file: null
   })
+  const [filters, setFilters] = useState({
+    regulation: '', year: '', semester: '', search: ''
+  })
 
   useEffect(() => {
     fetchFiles()
   }, [fetchFiles])
+
+  const filteredFiles = files.filter(file => {
+    return (!filters.regulation || file.regulation === filters.regulation) &&
+           (!filters.year || file.year === String(filters.year)) &&
+           (!filters.semester || file.semester === String(filters.semester)) &&
+           (!filters.search || file.title.toLowerCase().includes(filters.search.toLowerCase()) || file.subject.toLowerCase().includes(filters.search.toLowerCase()));
+  });
 
   const currentSubjects =
     predefinedSubjects[`${formData.regulation}-${formData.year}-${formData.semester}`] || ['General Subject']
@@ -56,7 +67,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-6 md:p-10 rounded-[2.5rem] min-h-[calc(100vh-8rem)] border border-indigo-100/50 shadow-sm">
       <div>
         <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Admin Control Panel</h1>
         <p className="text-slate-500 mt-1">Manage files and academic resources</p>
@@ -67,7 +78,7 @@ export default function AdminDashboard() {
         <div className="lg:col-span-1 glass-panel rounded-2xl p-6 h-max">
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2 bg-primary-100 text-primary-600 rounded-lg">
-              <FileUp className="w-5 h-5" />
+              <CloudUpload className="w-5 h-5" />
             </div>
             <h2 className="text-xl font-semibold text-slate-800">Upload Note</h2>
           </div>
@@ -143,11 +154,56 @@ export default function AdminDashboard() {
 
         {/* File List */}
         <div className="lg:col-span-2 glass-panel rounded-2xl p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-slate-100 text-slate-600 rounded-lg">
-              <FileText className="w-5 h-5" />
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-slate-100 text-slate-600 rounded-lg">
+                <Files className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Uploaded Files Overview</h2>
             </div>
-            <h2 className="text-xl font-semibold text-slate-800">Uploaded Files Overview</h2>
+            
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <input 
+                type="text" 
+                placeholder="Search files..." 
+                className="input-field py-1.5 px-3 text-sm w-32 xl:w-40 bg-white"
+                value={filters.search}
+                onChange={e => setFilters({...filters, search: e.target.value})}
+              />
+              <select 
+                className="input-field py-1.5 px-2 text-sm w-24 bg-white"
+                value={filters.regulation}
+                onChange={e => setFilters({...filters, regulation: e.target.value})}
+              >
+                <option value="">All Regs</option>
+                <option value="R19">R19</option>
+                <option value="R20">R20</option>
+                <option value="R21">R21</option>
+                <option value="R22">R22</option>
+                <option value="R23">R23</option>
+              </select>
+              <select 
+                className="input-field py-1.5 px-2 text-sm w-20 bg-white"
+                value={filters.year}
+                onChange={e => setFilters({...filters, year: e.target.value})}
+              >
+                <option value="">All Yrs</option>
+                <option value="1">Y1</option>
+                <option value="2">Y2</option>
+                <option value="3">Y3</option>
+                <option value="4">Y4</option>
+              </select>
+              <select 
+                className="input-field py-1.5 px-2 text-sm w-24 bg-white"
+                value={filters.semester}
+                onChange={e => setFilters({...filters, semester: e.target.value})}
+              >
+                <option value="">All Sems</option>
+                <option value="1">Sem 1</option>
+                <option value="2">Sem 2</option>
+              </select>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -160,7 +216,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {files.map(file => (
+                {filteredFiles.map(file => (
                   <tr key={file.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-4 px-4">
                       <p className="font-medium text-slate-800">{file.title}</p>
@@ -198,10 +254,10 @@ export default function AdminDashboard() {
                     </td>
                   </tr>
                 ))}
-                {files.length === 0 && (
+                {filteredFiles.length === 0 && (
                   <tr>
                     <td colSpan="3" className="py-8 text-center text-slate-500 text-sm">
-                      No files uploaded yet.
+                      {files.length === 0 ? "No files uploaded yet." : "No files match the selected filters."}
                     </td>
                   </tr>
                 )}

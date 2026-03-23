@@ -7,7 +7,7 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     regulation: '', year: '', semester: '', leetcode_url: '', github_url: '', custom_links: []
   })
-  
+
   useEffect(() => {
     fetchProfile().then(p => {
       if (p) {
@@ -65,7 +65,9 @@ export default function Profile() {
                 <option value="">Select Regulation</option>
                 <option value="R19">R19</option>
                 <option value="R20">R20</option>
+                <option value="R21">R21</option>
                 <option value="R22">R22</option>
+                <option value="R23">R23</option>
               </select>
             </div>
             <div>
@@ -87,7 +89,7 @@ export default function Profile() {
               </select>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">GitHub Profile</label>
