@@ -22,10 +22,16 @@ export default function AdminDashboard() {
 
   const currentSubjects =
     predefinedSubjects[`${formData.regulation}-${formData.year}-${formData.semester}`] || ['General Subject']
+
+  const allSubjects = Array.from(new Set([
+    ...currentSubjects,
+    ...files.map(f => f.subject).filter(Boolean)
+  ]))
+
   const handleChange = (e) => {
     const { name, value, files: fileList } = e.target
     if (name === 'file') {
-      setFormData({ ...formData, file: files[0] })
+      setFormData({ ...formData, file: fileList[0] })
     } else {
       setFormData({ ...formData, [name]: value })
     }
@@ -35,16 +41,13 @@ export default function AdminDashboard() {
     e.preventDefault()
     setIsUploading(true)
 
-    // Default subject if none selected
-    const finalSubject = formData.subject || currentSubjects[0]
-
     const data = new FormData()
     data.append('title', formData.title)
     data.append('description', formData.description)
     data.append('regulation', formData.regulation)
     data.append('year', formData.year)
     data.append('semester', formData.semester)
-    data.append('subject', finalSubject)
+    data.append('subject', formData.subject)
     if (formData.file) data.append('file', formData.file)
 
     await uploadFile(data)
@@ -85,7 +88,9 @@ export default function AdminDashboard() {
                 <select name="regulation" value={formData.regulation} onChange={handleChange} className="input-field">
                   <option value="R19">R19</option>
                   <option value="R20">R20</option>
+                  <option value="R21">R21</option>
                   <option value="R22">R22</option>
+                  <option value="R23">R23</option>
                 </select>
               </div>
               <div>
@@ -109,9 +114,19 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
-                <select name="subject" value={formData.subject} onChange={handleChange} className="input-field">
-                  {currentSubjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                </select>
+                <input
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="Type or select subject"
+                  required
+                  list="subjects-list"
+                />
+                <datalist id="subjects-list">
+                  {allSubjects.map(sub => <option key={sub} value={sub} />)}
+                </datalist>
               </div>
             </div>
 
